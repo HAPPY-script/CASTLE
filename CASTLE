@@ -64,7 +64,7 @@ local function executeMovement()
     else
         -- Teleport trước, sau đó lướt
         teleportToPosition(teleportPosition)
-        task.wait(0.1) -- Đợi một chút trước khi lướt
+        task.wait(0.3) -- Đợi một chút trước khi lướt
         performLunge(lungeTargetPosition)
     end
 end
