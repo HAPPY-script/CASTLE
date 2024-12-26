@@ -13,9 +13,9 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- Tùy chỉnh tọa độ tại đây
-local teleportPosition = Vector3.new(-5073.83, 330, -3152.52) -- Tọa độ teleport
-local lungeTargetPosition = Vector3.new(-4916.79, 317.45, -3051.62) -- Tọa độ lướt
+-- Tùy chỉnh tọa độ
+local teleportPosition = Vector3.new(-5073.83, 314.51, -3152.52) -- Tọa độ teleport
+local lungeTargetPosition = Vector3.new(-4992.52, 357.78, -3051.24) -- Tọa độ lướt
 
 -- Tốc độ lướt
 local lungeSpeed = 300 -- Tốc độ lướt (cao = nhanh)
@@ -25,14 +25,14 @@ local function calculateDistance(pos1, pos2)
     return (pos1 - pos2).Magnitude
 end
 
--- Teleport đến vị trí đầu tiên
+-- Teleport đến vị trí
 local function teleportToPosition(position)
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     humanoidRootPart.CFrame = CFrame.new(position)
 end
 
--- Lướt đến vị trí thứ hai
+-- Lướt đến vị trí
 local function performLunge(targetPosition)
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -47,25 +47,37 @@ local function performLunge(targetPosition)
     end
 end
 
+-- Teleport liên tục trong 2 giây
+local function teleportRepeatedly(position, duration)
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local startTime = tick()
+
+    while (tick() - startTime < duration) do
+        humanoidRootPart.CFrame = CFrame.new(position)
+        RunService.Heartbeat:Wait()
+    end
+end
+
 -- Logic chính
 local function executeMovement()
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     local currentPosition = humanoidRootPart.Position
 
-    -- Tính khoảng cách từ nhân vật đến hai tọa độ
-    local distanceToTeleport = calculateDistance(currentPosition, teleportPosition)
+    -- Tính khoảng cách
     local distanceToLunge = calculateDistance(currentPosition, lungeTargetPosition)
+    local teleportToLungeDistance = calculateDistance(teleportPosition, lungeTargetPosition)
 
-    -- So sánh khoảng cách và thực hiện hành động
-    if distanceToLunge < distanceToTeleport then
-        -- Lướt (bỏ qua teleport)
+    if distanceToLunge < teleportToLungeDistance then
+        -- Nếu gần tọa độ lướt hơn, chỉ lướt
         performLunge(lungeTargetPosition)
     else
-        -- Teleport trước, sau đó lướt
-        teleportToPosition(teleportPosition)
-        task.wait(0.3) -- Đợi một chút trước khi lướt
-        performLunge(lungeTargetPosition)
+        -- Nếu gần tọa độ teleport hơn
+        teleportRepeatedly(teleportPosition, 2) -- Teleport liên tục trong 2 giây
+        teleportToPosition(teleportPosition + Vector3.new(0, 100, 0)) -- Teleport lên cao 100m
+        task.wait(0.1) -- Chờ một chút
+        performLunge(lungeTargetPosition) -- Sau đó lướt
     end
 end
 
